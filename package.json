@@ -19,9 +19,8 @@
     "rxjs": "~7.8.0"
   },
   "devDependencies": {
-    "@analogjs/vite-plugin-angular": "^2.0.0",
+    "@analogjs/vite-plugin-angular": "^2.1.0",
     "@angular/compiler-cli": "~18.0.0",
-    "tinyglobby": "^0.2.1",
     "typescript": "~5.4.2",
     "vite": "^5.2.0"
   }

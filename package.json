@@ -1,5 +1,24 @@
 {
   "name": "ai-text-editor",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@angular/common": "~21.0.0",
+    "@angular/compiler": "~21.0.0",
+    "@angular/core": "~21.0.0",
+    "@angular/forms": "~21.0.0",
+    "@angular/platform-browser": "~21.0.0",
+    "@google/genai": "^1.30.0",
+    "rxjs": "~7.8.0"
+  },
+  "devDependencies": {
+    "@analogjs/vite-plugin-angular": "^1.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.1"
+  }
 }

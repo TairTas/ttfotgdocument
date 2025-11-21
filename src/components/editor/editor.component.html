@@ -1,0 +1,224 @@
+<style>
+  .page-break {
+    border: none;
+    border-top: 1px dashed #ccc;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+  .page-break::after {
+    content: 'Page Break';
+    display: block;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+</style>
+<div class="h-screen w-screen flex flex-col bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+  <!-- Header -->
+  <header class="flex items-center justify-between p-2 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <button (click)="onClose()" title="Back to Home" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+        <ion-icon name="arrow-back-outline" class="text-xl"></ion-icon>
+      </button>
+      <input type="text" [value]="document()?.title || ''" (input)="updateTitle($event)" (blur)="saveDocument()" class="bg-transparent text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#C861D3] rounded-md px-2 py-1 w-64 md:w-96" />
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="relative w-24 text-center">
+        @switch (saveStatus()) {
+          @case ('saving') { <span class="text-sm text-slate-500 dark:text-slate-400">Saving...</span> }
+          @case ('saved') { <span class="text-sm text-green-500">Saved!</span> }
+          @case ('idle') { <span class="text-sm text-slate-500 dark:text-slate-400">&nbsp;</span> }
+        }
+      </div>
+       <button (click)="toggleProtectModal()" title="Protect Document" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+        <ion-icon [name]="document()?.password ? 'lock-closed-outline' : 'lock-open-outline'" class="text-xl"></ion-icon>
+      </button>
+      <button (click)="toggleShareModal()" title="Share" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+        <ion-icon name="share-social-outline" class="text-xl"></ion-icon>
+      </button>
+      <div class="relative">
+        <button (click)="toggleExportMenu()" title="Export" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          <ion-icon name="download-outline" class="text-xl"></ion-icon>
+        </button>
+        @if (isExportMenuVisible()) {
+          <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-slate-200 dark:border-slate-700 z-10">
+            <a (click)="exportAs('txt')" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Export as .txt</a>
+            <a (click)="exportAs('docx')" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Export as .docx</a>
+            <a (click)="exportAs('pdf')" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Export as .pdf</a>
+            <a (click)="exportAs('png')" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Export as .png</a>
+             <a (click)="exportAs('json')" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer">Export as .json</a>
+          </div>
+        }
+      </div>
+      <button (click)="toggleAiChat()" [class]="'p-2 rounded-md transition-colors ' + (isAiChatVisible() ? 'bg-[#C861D3] text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700')" title="Ask AI">
+        <ion-icon name="sparkles-outline" class="text-xl"></ion-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="flex items-center gap-1 p-2 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex-shrink-0 flex-wrap">
+    <button (click)="applyFormat('bold')" [class]="'p-2 rounded-md w-10 ' + (isBold() ? 'bg-slate-200 dark:bg-slate-600' : 'hover:bg-slate-200 dark:hover:bg-slate-700')"><b class="text-lg">B</b></button>
+    <button (click)="applyFormat('italic')" [class]="'p-2 rounded-md w-10 ' + (isItalic() ? 'bg-slate-200 dark:bg-slate-600' : 'hover:bg-slate-200 dark:hover:bg-slate-700')"><i class="text-lg">I</i></button>
+    <button (click)="applyFormat('underline')" [class]="'p-2 rounded-md w-10 ' + (isUnderline() ? 'bg-slate-200 dark:bg-slate-600' : 'hover:bg-slate-200 dark:hover:bg-slate-700')"><u class="text-lg">U</u></button>
+    <div class="h-6 w-px bg-slate-200 dark:bg-slate-600 mx-1"></div>
+    <select #fontSizeSelect (change)="applyFormat('fontSize', fontSizeSelect.value)" class="bg-transparent p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none">
+      <option value="1">10px</option>
+      <option value="2">13px</option>
+      <option value="3" selected>16px</option>
+      <option value="4">18px</option>
+      <option value="5">24px</option>
+      <option value="6">32px</option>
+      <option value="7">48px</option>
+    </select>
+    <select #fontName (change)="applyFormat('fontName', fontName.value)" class="bg-transparent p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none w-32">
+      <option value="Arial">Arial</option>
+      <option value="Courier New">Courier</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Lato">Lato</option>
+      <option value="Montserrat">Montserrat</option>
+      <option value="Open Sans">Open Sans</option>
+      <option value="Roboto">Roboto</option>
+      <option value="Times New Roman">Times</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+     <div class="h-6 w-px bg-slate-200 dark:bg-slate-600 mx-1"></div>
+     <div class="relative p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700" title="Text Color">
+        <ion-icon name="color-palette-outline" class="text-xl"></ion-icon>
+        <input type="color" class="absolute inset-0 opacity-0 cursor-pointer" (input)="applyFormat('foreColor', $event.target.value)">
+     </div>
+     <div class="relative p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700" title="Highlight Color">
+        <ion-icon name="brush-outline" class="text-xl"></ion-icon>
+        <input type="color" class="absolute inset-0 opacity-0 cursor-pointer" (input)="applyFormat('hiliteColor', $event.target.value)">
+     </div>
+     <div class="h-6 w-px bg-slate-200 dark:bg-slate-600 mx-1"></div>
+     <button (click)="addPage()" title="Add Page" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
+        <ion-icon name="document-outline" class="text-xl"></ion-icon>
+     </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-grow flex overflow-hidden">
+    <!-- Editor -->
+    <div class="flex-grow overflow-y-auto p-4 md:p-8 lg:p-12 bg-slate-200 dark:bg-slate-600">
+      <div #editor 
+           contenteditable="true" 
+           (input)="saveDocument()" 
+           class="content-editor max-w-4xl mx-auto min-h-full bg-white text-slate-900 p-8 md:p-16 rounded-lg shadow-lg focus:outline-none prose prose-lg">
+      </div>
+    </div>
+
+    <!-- AI Chat Panel -->
+    @if (isAiChatVisible()) {
+      <aside class="w-full md:w-96 flex-shrink-0 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="text-lg font-semibold">Ask AI</h3>
+          <button (click)="toggleAiChat()" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
+            <ion-icon name="close-outline" class="text-xl"></ion-icon>
+          </button>
+        </div>
+        
+        @if(isAiAvailable()){
+          <div class="flex-grow overflow-y-auto p-4 space-y-4">
+            @for (message of chatMessages(); track message.id) {
+              <div [class]="'flex ' + (message.role === 'user' ? 'justify-end' : 'justify-start')">
+                <div [class]="'max-w-xs md:max-w-sm rounded-lg px-3 py-2 ' + (message.role === 'user' ? 'bg-[#C861D3] text-white' : 'bg-slate-200 dark:bg-slate-700')">
+                  <p class="text-sm whitespace-pre-wrap">{{ message.text }}</p>
+                   @if (message.role === 'model' && message.text !== '...' && message.text !== 'Sorry, an error occurred.') {
+                      <button (click)="insertAiResponse(message.text)" class="text-xs mt-2 opacity-70 hover:opacity-100 flex items-center gap-1">
+                          <ion-icon name="return-down-back-outline"></ion-icon> Insert
+                      </button>
+                   }
+                </div>
+              </div>
+            }
+            @if (isAiLoading()) {
+              <div class="flex justify-start">
+                  <div class="max-w-xs md:max-w-sm rounded-lg px-3 py-2 bg-slate-200 dark:bg-slate-700 animate-pulse">
+                    <p class="text-sm">Thinking...</p>
+                  </div>
+              </div>
+            }
+          </div>
+          <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-2">
+              <textarea [(ngModel)]="userMessage" (keydown.enter)="sendChatMessage(); $event.preventDefault()" placeholder="Ask anything..." rows="1" class="flex-grow bg-slate-100 dark:bg-slate-700 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#C861D3] resize-none"></textarea>
+              <button (click)="sendChatMessage()" [disabled]="isAiLoading() || !userMessage()" class="p-2 bg-[#C861D3] text-white rounded-lg disabled:bg-slate-400 disabled:cursor-not-allowed">
+                <ion-icon name="send-outline" class="text-xl"></ion-icon>
+              </button>
+            </div>
+          </div>
+        } @else {
+           <div class="p-4 text-center text-slate-500">
+                <p>AI features are unavailable. Please configure your API_KEY.</p>
+           </div>
+        }
+      </aside>
+    }
+  </div>
+</div>
+
+<!-- Protect Document Modal -->
+@if (isProtectModalVisible()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="toggleProtectModal()">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Protect Document</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        @if (document()?.password) { This document is currently protected. }
+        @else { Set a password to protect this document. }
+      </p>
+      <form (submit)="setDocumentPassword()">
+        <input 
+          type="password" 
+          [(ngModel)]="newPassword"
+          name="newPassword"
+          placeholder="New Password"
+          class="mt-4 w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C861D3]"
+          required
+        />
+        <input 
+          type="password" 
+          [(ngModel)]="confirmPassword"
+          name="confirmPassword"
+          placeholder="Confirm Password"
+          class="mt-2 w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C861D3]"
+          required
+        />
+        @if(passwordSetError()) {
+          <p class="text-red-500 text-xs mt-2">{{ passwordSetError() }}</p>
+        }
+        <div class="flex justify-between items-center mt-4">
+          <div>
+            @if (document()?.password) {
+              <button type="button" (click)="removeDocumentPassword()" class="px-4 py-2 rounded-md text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">Remove</button>
+            }
+          </div>
+          <div class="flex gap-2">
+            <button type="button" (click)="toggleProtectModal()" class="px-4 py-2 rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-md bg-[#C861D3] text-white hover:bg-[#b255ba] transition-colors">
+              @if (document()?.password) { Update } @else { Set Password }
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Share Modal -->
+@if(isShareModalVisible()){
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="toggleShareModal()">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-lg" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Share Document</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Anyone with this link can view and import a copy of this document.</p>
+      <div class="mt-4 flex items-center gap-2">
+        <input type="text" [value]="shareLink()" readonly class="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md border border-slate-300 dark:border-slate-600"/>
+        <button (click)="copyShareLink()" class="px-4 py-2 rounded-md bg-[#C861D3] text-white hover:bg-[#b255ba] transition-colors w-24">{{ copyButtonText() }}</button>
+      </div>
+       <div class="text-right mt-4">
+          <button type="button" (click)="toggleShareModal()" class="px-4 py-2 rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Close</button>
+      </div>
+    </div>
+  </div>
+}

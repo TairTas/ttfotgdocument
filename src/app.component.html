@@ -1,0 +1,14 @@
+
+<main class="h-screen w-screen">
+  @if (currentView() === 'home') {
+    <app-home 
+      (create)="navigateToEditor(null)" 
+      (open)="navigateToEditor($event)">
+    </app-home>
+  } @else {
+    <app-editor 
+      [documentId]="selectedDocumentId()" 
+      (close)="navigateToHome()">
+    </app-editor>
+  }
+</main>

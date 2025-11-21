@@ -1,0 +1,71 @@
+<div class="flex flex-col h-screen bg-[#C861D3]">
+  <header class="p-6 text-white">
+    <h1 class="text-4xl font-bold">AI Text Editor</h1>
+    <p class="text-lg opacity-80">Your documents, powered by AI.</p>
+  </header>
+
+  <main class="flex-grow bg-slate-100 dark:bg-slate-900 rounded-t-3xl p-6 overflow-y-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Recent Documents</h2>
+      <button (click)="onCreateNew()" class="flex items-center gap-2 px-4 py-2 bg-[#C861D3] text-white rounded-lg shadow-md hover:bg-[#b255ba] transition-colors">
+        <ion-icon name="add-outline" class="text-xl"></ion-icon>
+        <span>Create</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      @if (documents().length > 0) {
+        @for (doc of documents(); track doc.id) {
+          <div (click)="onOpenDocument(doc)" class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between h-40">
+            <div>
+              <h3 class="font-bold text-lg text-slate-900 dark:text-white truncate flex items-center gap-2">
+                @if(doc.password) {
+                  <ion-icon name="lock-closed-outline" class="text-sm text-slate-500"></ion-icon>
+                }
+                {{ doc.title }}
+              </h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 line-clamp-2" [innerHTML]="doc.content[0]"></p>
+            </div>
+            <div class="flex justify-between items-center mt-4">
+               <p class="text-xs text-slate-400 dark:text-slate-500">Updated: {{ formatDate(doc.updatedAt) }}</p>
+               <button (click)="onDeleteDocument($event, doc.id)" class="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 rounded-full">
+                  <ion-icon name="trash-outline"></ion-icon>
+               </button>
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="col-span-full text-center py-12 bg-slate-200 dark:bg-slate-800 rounded-lg">
+          <p class="text-slate-500 dark:text-slate-400">No documents yet. Click 'Create' to start a new one!</p>
+        </div>
+      }
+    </div>
+  </main>
+</div>
+
+<!-- Password Prompt Modal -->
+@if (documentToUnlock()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="cancelUnlock()">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Enter Password</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">This document is password protected.</p>
+      <form (submit)="handlePasswordSubmit()">
+        <input 
+          type="password" 
+          [(ngModel)]="passwordAttempt"
+          name="password"
+          placeholder="Password"
+          class="mt-4 w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C861D3]"
+          required
+        />
+        @if(passwordError()) {
+          <p class="text-red-500 text-xs mt-2">{{ passwordError() }}</p>
+        }
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" (click)="cancelUnlock()" class="px-4 py-2 rounded-md text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-[#C861D3] text-white hover:bg-[#b255ba] transition-colors">Unlock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,5 @@
+{
+  "name": "AI Text Editor",
+  "description": "A modern text editor with rich formatting options, various export formats, and an integrated AI chat assistant to help you write better and faster. Create, edit, and save your documents locally.",
+  "requestFramePermissions": []
+}

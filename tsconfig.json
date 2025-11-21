@@ -18,7 +18,7 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["src/**/*.ts", "index.tsx"],
+  "include": ["src/**/*.ts", "index.tsx", "vite.config.ts"],
   "angularCompilerOptions": {
     "compilationMode": "partial"
   }
